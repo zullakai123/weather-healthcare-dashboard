@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-800">
+  <div class="max-w-3xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-4">🌤️ Weather Dashboard</h1>
+    <input id="cityInput" type="text" placeholder="Enter city (e.g., Kuala Lumpur)" class="border p-2 w-full mb-4">
+    <div id="weatherInfo" class="mb-6"></div>
+    <canvas id="tempChart" width="400" height="200"></canvas>
+  </div>
+
+  <script>
+    const apiKey = 'YOUR_API_KEY';
+
+    async function fetchWeather(city) {
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${apiKey}`);
+      const data = await res.json();
+
+      const current = data.list[0];
+      document.getElementById('weatherInfo').innerHTML = `
+        <h2 class="text-xl font-semibold">${data.city.name}</h2>
+        <p>Temperature: ${current.main.temp}°C</p>
+        <p>Humidity: ${current.main.humidity}%</p>
+        <p>Wind Speed: ${current.wind.speed} m/s</p>
+      `;
+
+      const labels = data.list.slice(0, 8).map(item => new Date(item.dt_txt).getHours() + ':00');
+      const temps = data.list.slice(0, 8).map(item => item.main.temp);
+
+      new Chart(document.getElementById('tempChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Temperature (°C)',
+            data: temps,
+            fill: false,
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+          }]
+        }
+      });
+    }
+
+    document.getElementById('cityInput').addEventListener('change', (e) => {
+      fetchWeather(e.target.value);
+    });
+
+    fetchWeather('Kuala Lumpur');
+  </script>
+</body>
+</html>

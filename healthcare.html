@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Healthcare Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-gray-900">
+  <div class="max-w-3xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-4">🏥 Healthcare Dashboard</h1>
+    <select id="countrySelect" class="border p-2 w-full mb-4">
+      <option value="malaysia">Malaysia</option>
+      <option value="singapore">Singapore</option>
+      <option value="indonesia">Indonesia</option>
+      <option value="united-states">United States</option>
+    </select>
+    <div id="healthInfo" class="mb-6"></div>
+    <canvas id="casesChart" width="400" height="200"></canvas>
+  </div>
+
+  <script>
+    async function fetchHealthcare(country) {
+      const res = await fetch(`https://api.covid19api.com/total/country/${country}`);
+      const data = await res.json();
+      const last = data.slice(-1)[0];
+
+      document.getElementById('healthInfo').innerHTML = `
+        <h2 class="text-xl font-semibold capitalize">${country.replace('-', ' ')}</h2>
+        <p>Total Confirmed: ${last.Confirmed}</p>
+        <p>Total Deaths: ${last.Deaths}</p>
+        <p>Total Recovered: ${last.Recovered}</p>
+      `;
+
+      const labels = data.slice(-10).map(d => new Date(d.Date).toLocaleDateString());
+      const confirmed = data.slice(-10).map(d => d.Confirmed);
+
+      new Chart(document.getElementById('casesChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Confirmed Cases',
+            data: confirmed,
+            fill: false,
+            borderColor: 'rgb(255, 99, 132)',
+            tension: 0.1
+          }]
+        }
+      });
+    }
+
+    document.getElementById('countrySelect').addEventListener('change', (e) => {
+      fetchHealthcare(e.target.value);
+    });
+
+    fetchHealthcare('malaysia');
+  </script>
+</body>
+</html>
