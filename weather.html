@@ -1,10 +1,10 @@
-<!-- index.html (modified with autocomplete script inclusion) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="images/logo.ico" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weather Dashboard</title>
+  <title>🌤️ Weather Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -28,10 +28,12 @@
     #suggestions div:hover {
       background-color: #f3f4f6;
     }
-</style>
+  </style>
 </head>
 <body class="bg-blue-50 text-gray-800 min-h-screen flex items-center justify-center">
   <div class="bg-white shadow-xl rounded-xl p-8 max-w-2xl w-full relative">
+    <a href="index.html" class="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700 shadow">← Back</a>
+
     <h1 class="text-4xl font-bold text-center mb-6 text-blue-600">🌤️ Weather Dashboard</h1>
     <div class="relative mb-6">
       <input id="cityInput" type="text" placeholder="Enter Malaysian city" autocomplete="off"
@@ -47,12 +49,12 @@
   <script>
     const apiKey = '639fe128b5c412af6975e54008f89e34';
     let chartInstance;
-    const cities = ["Kuala Lumpur", "George Town", "Ipoh", "Shah Alam", "Petaling Jaya", "Johor Bahru", "Melaka",
-      "Kuantan", "Alor Setar", "Kota Bharu", "Kuala Terengganu", "Seremban", "Kangar", "Kota Kinabalu",
-      "Sandakan", "Tawau", "Lahad Datu", "Miri", "Sibu", "Bintulu", "Kuching", "Putrajaya", "Cyberjaya",
-      "Pulau Pinang", "Langkawi", "Sepang", "Rawang", "Gombak", "Nilai", "Sungai Petani", "Bukit Mertajam",
-      "Taiping", "Batu Pahat", "Kluang", "Pasir Gudang", "Kemaman", "Dungun", "Marang", "Besut", "Jitra",
-      "Manjung", "Tanjung Malim", "Port Dickson"];
+    const cities = ["Kuala Lumpur", "George Town", "Ipoh", "Shah Alam", "Petaling Jaya", "Johor Bahru",
+      "Melaka", "Kuantan", "Alor Setar", "Kota Bharu", "Kuala Terengganu", "Seremban", "Kangar",
+      "Kota Kinabalu", "Sandakan", "Tawau", "Lahad Datu", "Miri", "Sibu", "Bintulu", "Kuching",
+      "Putrajaya", "Cyberjaya", "Pulau Pinang", "Langkawi", "Sepang", "Rawang", "Gombak", "Nilai",
+      "Sungai Petani", "Bukit Mertajam", "Taiping", "Batu Pahat", "Kluang", "Pasir Gudang", "Kemaman",
+      "Dungun", "Marang", "Besut", "Jitra", "Manjung", "Tanjung Malim", "Port Dickson"];
 
     const input = document.getElementById('cityInput');
     const suggestions = document.getElementById('suggestions');

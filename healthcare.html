@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <link rel="icon" href="images/logo.ico" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🏥 Healthcare Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gradient-to-b from-blue-50 to-white text-gray-800 min-h-screen flex items-center justify-center">
-  <div class="bg-white shadow-xl rounded-xl p-8 max-w-3xl w-full">
+  <div class="bg-white shadow-xl rounded-xl p-8 max-w-3xl w-full relative">
+    <a href="index.html" class="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700 shadow">← Back</a>
     <h1 class="text-4xl font-bold text-center mb-4 text-blue-600">🏥 Healthcare Dashboard</h1>
     <p class="text-center text-gray-600 mb-6">Live COVID-19 stats and trends by country</p>
 
@@ -34,7 +35,7 @@
     <div id="healthStats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-6"></div>
     <div>
       <canvas id="trendChart" class="w-full h-[400px] sm:h-[500px] md:h-[600px] mx-auto"></canvas>
-    </div>
+
   </div>
 
   <script>
