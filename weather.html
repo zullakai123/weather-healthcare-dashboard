@@ -1,58 +1,172 @@
+<!-- index.html (modified with autocomplete script inclusion) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Weather Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    canvas {
+      height: 300px !important;
+    }
+    #suggestions {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      border-top: none;
+      z-index: 50;
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    #suggestions div {
+      padding: 8px;
+      cursor: pointer;
+    }
+    #suggestions div:hover {
+      background-color: #f3f4f6;
+    }
+</style>
 </head>
-<body class="bg-white text-gray-800">
-  <div class="max-w-3xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-4">🌤️ Weather Dashboard</h1>
-    <input id="cityInput" type="text" placeholder="Enter city (e.g., Kuala Lumpur)" class="border p-2 w-full mb-4">
-    <div id="weatherInfo" class="mb-6"></div>
-    <canvas id="tempChart" width="400" height="200"></canvas>
+<body class="bg-blue-50 text-gray-800 min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-xl rounded-xl p-8 max-w-2xl w-full relative">
+    <h1 class="text-4xl font-bold text-center mb-6 text-blue-600">🌤️ Weather Dashboard</h1>
+    <div class="relative mb-6">
+      <input id="cityInput" type="text" placeholder="Enter Malaysian city" autocomplete="off"
+        class="w-full border border-gray-300 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-400 outline-none">
+      <div id="suggestions" class="hidden"></div>
+    </div>
+    <button id="searchBtn" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4">Search</button>
+    <div id="loader" class="text-center hidden text-gray-500 mb-4">🔄 Loading...</div>
+    <div id="weatherInfo" class="text-center mb-6"></div>
+    <canvas id="tempChart" class="mx-auto"></canvas>
   </div>
 
   <script>
-    const apiKey = 'YOUR_API_KEY';
+    const apiKey = '639fe128b5c412af6975e54008f89e34';
+    let chartInstance;
+    const cities = ["Kuala Lumpur", "George Town", "Ipoh", "Shah Alam", "Petaling Jaya", "Johor Bahru", "Melaka",
+      "Kuantan", "Alor Setar", "Kota Bharu", "Kuala Terengganu", "Seremban", "Kangar", "Kota Kinabalu",
+      "Sandakan", "Tawau", "Lahad Datu", "Miri", "Sibu", "Bintulu", "Kuching", "Putrajaya", "Cyberjaya",
+      "Pulau Pinang", "Langkawi", "Sepang", "Rawang", "Gombak", "Nilai", "Sungai Petani", "Bukit Mertajam",
+      "Taiping", "Batu Pahat", "Kluang", "Pasir Gudang", "Kemaman", "Dungun", "Marang", "Besut", "Jitra",
+      "Manjung", "Tanjung Malim", "Port Dickson"];
 
-    async function fetchWeather(city) {
-      const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${apiKey}`);
-      const data = await res.json();
+    const input = document.getElementById('cityInput');
+    const suggestions = document.getElementById('suggestions');
 
-      const current = data.list[0];
-      document.getElementById('weatherInfo').innerHTML = `
-        <h2 class="text-xl font-semibold">${data.city.name}</h2>
-        <p>Temperature: ${current.main.temp}°C</p>
-        <p>Humidity: ${current.main.humidity}%</p>
-        <p>Wind Speed: ${current.wind.speed} m/s</p>
-      `;
-
-      const labels = data.list.slice(0, 8).map(item => new Date(item.dt_txt).getHours() + ':00');
-      const temps = data.list.slice(0, 8).map(item => item.main.temp);
-
-      new Chart(document.getElementById('tempChart'), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Temperature (°C)',
-            data: temps,
-            fill: false,
-            borderColor: 'rgb(75, 192, 192)',
-            tension: 0.1
-          }]
-        }
+    input.addEventListener('input', () => {
+      const value = input.value.toLowerCase();
+      suggestions.innerHTML = '';
+      if (!value) return suggestions.classList.add('hidden');
+      const matches = cities.filter(city => city.toLowerCase().includes(value));
+      if (!matches.length) return suggestions.classList.add('hidden');
+      matches.forEach(city => {
+        const div = document.createElement('div');
+        div.textContent = city;
+        div.onclick = () => {
+          input.value = city;
+          suggestions.classList.add('hidden');
+          fetchWeather(city);
+        };
+        suggestions.appendChild(div);
       });
-    }
-
-    document.getElementById('cityInput').addEventListener('change', (e) => {
-      fetchWeather(e.target.value);
+      suggestions.classList.remove('hidden');
     });
 
-    fetchWeather('Kuala Lumpur');
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#cityInput')) {
+        suggestions.classList.add('hidden');
+      }
+    });
+
+    async function fetchWeather(city) {
+      if (!city) return;
+      document.getElementById('loader').classList.remove('hidden');
+      document.getElementById('weatherInfo').innerHTML = '';
+      if (chartInstance) chartInstance.destroy();
+
+      try {
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${apiKey}`);
+        const data = await res.json();
+
+        if (!data.city) throw new Error("City not found");
+        const current = data.list[0];
+
+        document.getElementById('weatherInfo').innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+            <div class="bg-blue-100 border border-blue-300 rounded-lg p-4">
+              <div class="text-3xl">🌡️</div>
+              <div class="font-bold text-blue-700">Temperature</div>
+              <div class="text-lg font-semibold">${current.main.temp}°C</div>
+            </div>
+            <div class="bg-blue-100 border border-blue-300 rounded-lg p-4">
+              <div class="text-3xl">💧</div>
+              <div class="font-bold text-blue-700">Humidity</div>
+              <div class="text-lg font-semibold">${current.main.humidity}%</div>
+            </div>
+            <div class="bg-blue-100 border border-blue-300 rounded-lg p-4">
+              <div class="text-3xl">💨</div>
+              <div class="font-bold text-blue-700">Wind</div>
+              <div class="text-lg font-semibold">${current.wind.speed} m/s</div>
+            </div>
+          </div>`;
+
+        const labels = data.list.slice(0, 8).map(item => new Date(item.dt_txt).getHours() + ':00');
+        const temps = data.list.slice(0, 8).map(item => item.main.temp);
+
+        const ctx = document.getElementById('tempChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+        chartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Temperature (°C)',
+              data: temps,
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: 'rgb(59, 130, 246)',
+              pointHoverRadius: 6,
+              pointRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { labels: { color: '#2563EB', font: { weight: 'bold' } } },
+              tooltip: { backgroundColor: '#2563EB' }
+            },
+            scales: {
+              x: { ticks: { color: '#4B5563' } },
+              y: { beginAtZero: false, ticks: { color: '#4B5563' } }
+            },
+            animation: {
+              duration: 1200,
+              easing: 'easeInOutQuart'
+            }
+          }
+        });
+      } catch (err) {
+        document.getElementById('weatherInfo').innerHTML = `<p class="text-red-500 text-xl">❌ ${err.message}</p>`;
+      } finally {
+        document.getElementById('loader').classList.add('hidden');
+      }
+    }
+
+    window.onload = () => {
+      fetchWeather('Kuala Lumpur');
+      document.getElementById('searchBtn').addEventListener('click', () => {
+        fetchWeather(document.getElementById('cityInput').value);
+      });
+    };
   </script>
 </body>
 </html>
