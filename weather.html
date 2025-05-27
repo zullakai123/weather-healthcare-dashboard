@@ -2,46 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" href="images/logo.ico" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🌤️ Weather Dashboard</title>
+  <title>☀️ Weather Dashboard</title>
+  <link rel="icon" href="images/logo.ico" type="image/x-icon">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    canvas {
-      height: 300px !important;
-    }
-    #suggestions {
-      position: absolute;
-      background: white;
-      border: 1px solid #ccc;
-      border-top: none;
-      z-index: 50;
-      width: 100%;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-    #suggestions div {
-      padding: 8px;
-      cursor: pointer;
-    }
-    #suggestions div:hover {
-      background-color: #f3f4f6;
-    }
-  </style>
 </head>
 <body class="bg-blue-50 text-gray-800 min-h-screen flex items-center justify-center">
   <div class="bg-white shadow-xl rounded-xl p-8 max-w-2xl w-full relative">
-    <a href="index.html" class="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700 shadow">← Back</a>
+    <a href="index.html" class="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700 shadow"> ← Back</a>
 
-    <h1 class="text-4xl font-bold text-center mb-6 text-blue-600">🌤️ Weather Dashboard</h1>
-    <div class="relative mb-6">
+    <h1 class="text-4xl font-bold text-center mb-6 text-blue-600">☀️ Weather Dashboard</h1>
+
+    <div class="mb-4">
       <input id="cityInput" type="text" placeholder="Enter Malaysian city" autocomplete="off"
         class="w-full border border-gray-300 p-2 rounded shadow-sm focus:ring-2 focus:ring-blue-400 outline-none">
       <div id="suggestions" class="hidden"></div>
     </div>
+
+    <div class="text-center mb-4">
+      <label for="timeFilter" class="block mb-1 font-medium text-gray-700">Filter Time Slot:</label>
+      <select id="timeFilter" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-400">
+        <option value="all">All Day</option>
+        <option value="morning">Morning (6AM–12PM)</option>
+        <option value="afternoon">Afternoon (12PM–6PM)</option>
+        <option value="night">Night (6PM–12AM)</option>
+      </select>
+    </div>
+
     <button id="searchBtn" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-4">Search</button>
-    <div id="loader" class="text-center hidden text-gray-500 mb-4">🔄 Loading...</div>
+    <div id="loader" class="text-center hidden text-gray-500 mb-4"> 🔄 Loading...</div>
     <div id="weatherInfo" class="text-center mb-6"></div>
     <canvas id="tempChart" class="mx-auto"></canvas>
   </div>
@@ -86,6 +76,7 @@
 
     async function fetchWeather(city) {
       if (!city) return;
+      const timeFilter = document.getElementById('timeFilter').value;
       document.getElementById('loader').classList.remove('hidden');
       document.getElementById('weatherInfo').innerHTML = '';
       if (chartInstance) chartInstance.destroy();
@@ -96,6 +87,14 @@
 
         if (!data.city) throw new Error("City not found");
         const current = data.list[0];
+
+        const filteredList = data.list.filter(item => {
+          const hour = new Date(item.dt_txt).getHours();
+          if (timeFilter === 'morning') return hour >= 6 && hour < 12;
+          if (timeFilter === 'afternoon') return hour >= 12 && hour < 18;
+          if (timeFilter === 'night') return hour >= 18 && hour <= 23;
+          return true;
+        }).slice(0, 8);
 
         document.getElementById('weatherInfo').innerHTML = `
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
@@ -110,14 +109,14 @@
               <div class="text-lg font-semibold">${current.main.humidity}%</div>
             </div>
             <div class="bg-blue-100 border border-blue-300 rounded-lg p-4">
-              <div class="text-3xl">💨</div>
+              <div class="text-3xl">🌬️</div>
               <div class="font-bold text-blue-700">Wind</div>
               <div class="text-lg font-semibold">${current.wind.speed} m/s</div>
             </div>
           </div>`;
 
-        const labels = data.list.slice(0, 8).map(item => new Date(item.dt_txt).getHours() + ':00');
-        const temps = data.list.slice(0, 8).map(item => item.main.temp);
+        const labels = filteredList.map(item => new Date(item.dt_txt).getHours() + ':00');
+        const temps = filteredList.map(item => item.main.temp);
 
         const ctx = document.getElementById('tempChart').getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -166,6 +165,9 @@
     window.onload = () => {
       fetchWeather('Kuala Lumpur');
       document.getElementById('searchBtn').addEventListener('click', () => {
+        fetchWeather(document.getElementById('cityInput').value);
+      });
+      document.getElementById('timeFilter').addEventListener('change', () => {
         fetchWeather(document.getElementById('cityInput').value);
       });
     };
